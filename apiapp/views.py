@@ -1,24 +1,37 @@
 from django.shortcuts import get_object_or_404, render
 from django.db.models import Max
 from apiapp.serializers import ProdcutSerializer,OrderSerializer,OrderItemSerializer,productinfoserializer
-from apiapp.models import Product,Order,OrderItem
+from apiapp.models import Product,Order,OrderItem,User
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
+from rest_framework import status
 from rest_framework.views import APIView
-
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter,OrderingFilter
 
 # Create your views here.
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset=Product.objects.all()
     serializer_class=ProdcutSerializer
-
-class ProductDestroyAPIView(generics.DestroyAPIView):
+    filter_backends=[DjangoFilterBackend,SearchFilter,OrderingFilter ]
+    def get_permissions(self):
+        self.permission_classes=[AllowAny]
+        if self.request.method=='POST':
+            self.permission_classes=[IsAdminUser]
+        return super().get_permissions()
+    
+class ProductRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset=Product.objects.all()
     serializer_class=ProdcutSerializer
     
-class OrderListAPIView(generics.ListAPIView):
+    def get_permissions(self):
+        
+        if self.request.method== 'PUT' or 'DELETE':
+            self.permission_classes=[IsAdminUser]
+        return super().get_permissions()  
+class OrderListCreateAPIView(generics.ListCreateAPIView):
     queryset=Order.objects.all()
     serializer_class=OrderSerializer
 class UserOrderListAPIView(generics.ListAPIView):
@@ -31,10 +44,6 @@ class UserOrderListAPIView(generics.ListAPIView):
 class OrderItemListAPIView(generics.ListAPIView):
     queryset=OrderItem.objects.all()
     serializer_class=OrderItemSerializer
-
-class ProductDetailAPIView(generics.RetrieveAPIView):
-    queryset=Product.objects.all()
-    serializer_class=ProdcutSerializer
 
 
 class ProductInfoAPIView(APIView):

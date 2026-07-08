@@ -4,10 +4,10 @@ from apiapp import views
 
 urlpatterns = [
    path('products/',views.ProductListCreateAPIView.as_view()),
-   path('products/<int:pk>/delete/',views.ProductDestroyAPIView.as_view()),
-   path('products/<int:pk>/',views.ProductDetailAPIView.as_view()),
-   path('orders/',views.OrderListAPIView.as_view()),
+   path('products/<int:pk>/update/',views.ProductRetrieveUpdateDestroyAPIView.as_view()),
+   path('orders/',views.OrderListCreateAPIView.as_view()),
    path('order_items/',views.OrderItemListAPIView.as_view()),
    path('product_info/',views.ProductInfoAPIView.as_view()),
    path('userorders/',views.UserOrderListAPIView.as_view(),name='userorders'),
+   
 ]
