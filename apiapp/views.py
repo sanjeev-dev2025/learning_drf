@@ -15,7 +15,8 @@ from rest_framework.filters import SearchFilter,OrderingFilter
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset=Product.objects.all()
     serializer_class=ProdcutSerializer
-    filter_backends=[DjangoFilterBackend,SearchFilter,OrderingFilter ]
+    
+    filterset_fields=('name','price')
     def get_permissions(self):
         self.permission_classes=[AllowAny]
         if self.request.method=='POST':
@@ -34,6 +35,8 @@ class ProductRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
 class OrderListCreateAPIView(generics.ListCreateAPIView):
     queryset=Order.objects.all()
     serializer_class=OrderSerializer
+    
+    filterset_fields=('user','status')
 class UserOrderListAPIView(generics.ListAPIView):
     queryset=Order.objects.all()
     serializer_class=OrderSerializer
@@ -44,7 +47,8 @@ class UserOrderListAPIView(generics.ListAPIView):
 class OrderItemListAPIView(generics.ListAPIView):
     queryset=OrderItem.objects.all()
     serializer_class=OrderItemSerializer
-
+    filter_backends=[DjangoFilterBackend,SearchFilter,OrderingFilter]
+    filterset_fields=('order','product')
 
 class ProductInfoAPIView(APIView):
      def get(self, request):
