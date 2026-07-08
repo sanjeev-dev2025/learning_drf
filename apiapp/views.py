@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponse
 from django.db.models import Max
 from apiapp.serializers import ProdcutSerializer,OrderSerializer,OrderItemSerializer,productinfoserializer
 from apiapp.models import Product,Order,OrderItem,User
@@ -10,13 +10,14 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter,OrderingFilter
-
+import csv
+from .filters import ProductFilter
 # Create your views here.
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset=Product.objects.all()
     serializer_class=ProdcutSerializer
     
-    filterset_fields=('name','price')
+    filterset_class=ProductFilter
     def get_permissions(self):
         self.permission_classes=[AllowAny]
         if self.request.method=='POST':
@@ -60,3 +61,12 @@ class ProductInfoAPIView(APIView):
          })
          return Response(serializer.data)
 
+def ExportProductCSVAPIView(request):
+    products=Product.objects.all()
+    response=HttpResponse(content_type='text/csv')
+    response['Content-Disposition']='attachment; filename="products.csv"'
+    writer=csv.writer(response)
+    writer.writerow(['ID','Name','Description','Price','Stock'])
+    for product in products:
+        writer.writerow([product.id,product.name,product.description,product.price,product.stock])
+    return response

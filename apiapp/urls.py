@@ -9,5 +9,5 @@ urlpatterns = [
    path('order_items/',views.OrderItemListAPIView.as_view()),
    path('product_info/',views.ProductInfoAPIView.as_view()),
    path('userorders/',views.UserOrderListAPIView.as_view(),name='userorders'),
-   
+   path('exportcsv/',views.ExportProductCSVAPIView,name='exportcsv'),
 ]
