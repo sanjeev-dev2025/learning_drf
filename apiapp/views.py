@@ -1,3 +1,4 @@
+from apiapp import filters
 from django.http import HttpResponse
 from django.db.models import Max
 from apiapp.serializers import ProdcutSerializer,OrderSerializer,OrderItemSerializer,productinfoserializer
@@ -11,13 +12,16 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter,OrderingFilter
 import csv
-from .filters import ProductFilter
+from apiapp.filters import ProductFilter,InStockProductFilter
 # Create your views here.
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset=Product.objects.all()
     serializer_class=ProdcutSerializer
     
     filterset_class=ProductFilter
+    filter_backends=[DjangoFilterBackend,InStockProductFilter,SearchFilter,OrderingFilter]
+    search_fields=['name','description']
+    ordering_fields=['price','stock']
     def get_permissions(self):
         self.permission_classes=[AllowAny]
         if self.request.method=='POST':
@@ -30,14 +34,16 @@ class ProductRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
     
     def get_permissions(self):
         
-        if self.request.method== 'PUT' or 'DELETE':
+        if self.request.method in ['PUT', 'DELETE']:
             self.permission_classes=[IsAdminUser]
         return super().get_permissions()  
 class OrderListCreateAPIView(generics.ListCreateAPIView):
     queryset=Order.objects.all()
     serializer_class=OrderSerializer
-    
+    filter_backends=[DjangoFilterBackend,SearchFilter,OrderingFilter]
     filterset_fields=('user','status')
+    search_fields=['user__username','order_id']
+    ordering_fields=['created_at']
 class UserOrderListAPIView(generics.ListAPIView):
     queryset=Order.objects.all()
     serializer_class=OrderSerializer
@@ -70,3 +76,16 @@ def ExportProductCSVAPIView(request):
     for product in products:
         writer.writerow([product.id,product.name,product.description,product.price,product.stock])
     return response
+class OrderDestroy(generics.DestroyAPIView):
+    queryset=Order.objects.all()
+    serializer_class=OrderSerializer
+    permission_classes=[IsAuthenticated]
+    filter_backends=[DjangoFilterBackend,SearchFilter,OrderingFilter]
+    search_fields=['order_id','user__username']
+    ordering_fields=['created_at']
+    def get_permissions(self):
+        if self.request.method=='DELETE':
+            self.permission_classes=[IsAdminUser]
+        return super().get_permissions()
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)

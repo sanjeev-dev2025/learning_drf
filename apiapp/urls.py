@@ -10,4 +10,5 @@ urlpatterns = [
    path('product_info/',views.ProductInfoAPIView.as_view()),
    path('userorders/',views.UserOrderListAPIView.as_view(),name='userorders'),
    path('exportcsv/',views.ExportProductCSVAPIView,name='exportcsv'),
+   path('userorders/<int:pk>/',views.OrderDestroy.as_view()),
 ]

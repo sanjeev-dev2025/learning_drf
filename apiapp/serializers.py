@@ -1,14 +1,16 @@
 from rest_framework import serializers
-from .models import Product,Order,OrderItem
+from apiapp.models import Product,Order,OrderItem
 
 class ProdcutSerializer(serializers.ModelSerializer):
     class Meta:
         model= Product
         fields=(
-            'description',
+            'id',
             'name',
+            'description',
             'price',
             'stock',
+            'image',
         ) 
 
         
@@ -25,6 +27,9 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_total_price(self, obj):
         order_items=obj.items.all()
         return sum([item.item_subtotal for item in order_items])
+    
+    items_input = serializers.JSONField(write_only=True, required=False)
+
     class Meta:
         model=Order
         fields=(
@@ -35,8 +40,21 @@ class OrderSerializer(serializers.ModelSerializer):
             'product_name',
             'products',
             'total_price',  
-           
+            'items_input',
         )
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items_input', [])
+        order = Order.objects.create(**validated_data)
+        for item in items_data:
+            product_id = item.get('product_id')
+            quantity = item.get('quantity', 1)
+            try:
+                product = Product.objects.get(id=product_id)
+                OrderItem.objects.create(order=order, product=product, quantity=quantity)
+            except Product.DoesNotExist:
+                pass
+        return order
 class OrderItemSerializer(serializers.ModelSerializer):
     product=ProdcutSerializer(read_only=True)
     class Meta:
